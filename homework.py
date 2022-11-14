@@ -33,7 +33,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     filename='program.log',
     filemode='w',
-    format='%(asctime)s - %(levelname)s - %(message)s - %(name)s' 
+    format='%(asctime)s - %(levelname)s - %(message)s - %(name)s'
 )
 logger = logging.getLogger(__name__)
 logger.addHandler(
@@ -65,7 +65,7 @@ def get_api_answer(current_timestamp):
             params=params
         )
         if homework_status.status_code != HTTPStatus.OK:
-            logger.error(f'Ошибка при запросе к API')
+            logger.error('Ошибка при запросе к API')
             raise Exception('Ошибка при запросе к API')
         homework_status_py = homework_status.json()
         return homework_status_py
@@ -96,7 +96,7 @@ def parse_status(homework):
     homework_status = homework['status']
     try:
         verdict = HOMEWORK_STATUSES[homework_status]
-    except Exception as Error:
+    except Exception:
         logger.error('Список домашних работ пуст')
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
