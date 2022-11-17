@@ -27,6 +27,10 @@ HOMEWORK_VERDICTES = {
 
 MESSAGE = 'Ошибка при запросе к API'
 NOT_HOMEWORKS = 'Нет ключа homeworks'
+HOMEWORK_LIST = 'Список с домашками пуст'
+HOMEWORK_STATUS = 'Ключа нет в словаре'
+NOT_HOMEWORK_LIST = 'Ошибка типа данных в homework'
+TYPE_HOMEWORK_LIST = 'Ошибка типа данных в homework_list'
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -59,9 +63,9 @@ def send_message(bot, message):
 
 def get_api_answer(current_timestamp):
     """Функция для запроса к эндпоинту API-сервиса."""
+    timestamp = current_timestamp
+    params = {'from_date': timestamp}
     try:
-        timestamp = current_timestamp
-        params = {'from_date': timestamp}
         homework_status = requests.get(
             ENDPOINT,
             headers=HEADERS,
@@ -80,29 +84,31 @@ def check_response(response):
     """Функция для проверки ответа API на корректность."""
     if not response['homeworks']:
         logger.error(NOT_HOMEWORKS)
-        raise ValueError(NOT_HOMEWORKS)
+        raise KeyError(NOT_HOMEWORKS)
     homework_list = response['homeworks']
     if not isinstance(homework_list, list):
-        logger.error('Ошибка типа данных в homework_list')
-        raise TypeError(f'Тип данных: {type(homework_list)}, ожидался: list')
+        logger.error(TYPE_HOMEWORK_LIST)
+        raise TypeError(TYPE_HOMEWORK_LIST)
     if not homework_list:
-        logger.error('Список с домашками пуст')
-    else:
-        homework = homework_list[0]
-        return homework
+        logger.error(HOMEWORK_LIST)
+        raise Exception(HOMEWORK_LIST)
+    return homework_list[0]
 
 
 def parse_status(homework):
     """Функция для проверки статуса о выполнении ДЗ."""
     if not isinstance(homework, dict):
-        logger.error('Ошибка типа данных в homework')
-        raise KeyError('Отсутствует ключ "homework_name" в ответе API')
+        logger.error(NOT_HOMEWORK_LIST)
+        raise KeyError(NOT_HOMEWORK_LIST)
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
     if homework_name is None:
         raise Exception(f'homework_name отсутствует {homework_name}')
     if homework_status is None:
         raise Exception(f'homework_status отсутствует {homework_status}')
+    if homework_status not in HOMEWORK_VERDICTES:
+        logger.error(HOMEWORK_STATUS)
+        raise KeyError(HOMEWORK_STATUS)
     verdict = HOMEWORK_VERDICTES[homework_status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
@@ -119,7 +125,6 @@ def main():
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
     last_message = ''
-    errors = True
     while True:
         try:
             response = get_api_answer(current_timestamp)
@@ -131,8 +136,8 @@ def main():
                 time.sleep(RETRY_TIME)
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            if errors:
-                errors = True
+            if last_message != message:
+                last_message = message
                 send_message(bot, message)
             logger.error(message, exc_info=True)
             time.sleep(RETRY_TIME)
