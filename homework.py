@@ -30,6 +30,8 @@ NOT_HOMEWORKS = 'Нет ключа homeworks'
 HOMEWORK_LIST = 'Список с домашками пуст'
 HOMEWORK_STATUS = 'Ключа нет в словаре'
 NOT_HOMEWORK_LIST = 'Ошибка типа данных в homework'
+NOT_KEY = 'Отсутствует ключ'
+STATUS = 'Отсутствует статус homeworks'
 TYPE_HOMEWORK_LIST = 'Ошибка типа данных в homework_list'
 
 logging.basicConfig(
@@ -55,6 +57,7 @@ def send_message(bot, message):
         logger.info(
             f'Сообщение в чат отправлено: {message}'
         )
+        return message
     except telegram.TelegramError as telegram_error:
         logger.error(
             f'Сообщение в чат не отправлено: {telegram_error}'
@@ -63,8 +66,7 @@ def send_message(bot, message):
 
 def get_api_answer(current_timestamp):
     """Функция для запроса к эндпоинту API-сервиса."""
-    timestamp = current_timestamp
-    params = {'from_date': timestamp}
+    params = {'from_date': current_timestamp}
     try:
         homework_status = requests.get(
             ENDPOINT,
@@ -82,13 +84,16 @@ def get_api_answer(current_timestamp):
 
 def check_response(response):
     """Функция для проверки ответа API на корректность."""
-    if not response['homeworks']:
-        logger.error(NOT_HOMEWORKS)
-        raise KeyError(NOT_HOMEWORKS)
     homework_list = response['homeworks']
+    if not homework_list:
+        logger.error(STATUS)
+        raise LookupError(STATUS)
     if not isinstance(homework_list, list):
         logger.error(TYPE_HOMEWORK_LIST)
         raise TypeError(TYPE_HOMEWORK_LIST)
+    if 'homeworks' not in response.keys():
+        logger.error(NOT_KEY)
+        raise KeyError(NOT_KEY)
     if not homework_list:
         logger.error(HOMEWORK_LIST)
         raise Exception(HOMEWORK_LIST)
