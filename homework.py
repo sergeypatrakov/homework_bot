@@ -62,6 +62,7 @@ def send_message(bot, message):
         logger.error(
             f'Сообщение в чат не отправлено: {telegram_error}'
         )
+        return message
 
 
 def get_api_answer(current_timestamp):
@@ -138,13 +139,12 @@ def main():
             if last_message != message:
                 last_message = message
                 send_message(bot, last_message)
-                time.sleep(RETRY_TIME)
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            if last_message != message:
-                last_message = message
-                send_message(bot, message)
+            send_message(bot, message)
             logger.error(message, exc_info=True)
+        finally:
+            current_timestamp = int(time.time())
             time.sleep(RETRY_TIME)
 
 
