@@ -57,12 +57,10 @@ def send_message(bot, message):
         logger.info(
             f'Сообщение в чат отправлено: {message}'
         )
-        return message
     except telegram.TelegramError as telegram_error:
         logger.error(
             f'Сообщение в чат не отправлено: {telegram_error}'
         )
-        return message
 
 
 def get_api_answer(current_timestamp):
@@ -124,6 +122,13 @@ def check_tokens():
     return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
 
 
+def send_not_doubled_message(bot, message, previous_message):
+    """Проверяет и отправляет сообщение без повтора.."""
+    if message != previous_message:
+        send_message(bot, message)
+    return message
+
+
 def main():
     """Основная логика работы бота."""
     if not check_tokens():
@@ -131,6 +136,7 @@ def main():
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
     last_message = ''
+    previous_message = None
     while True:
         try:
             response = get_api_answer(current_timestamp)
@@ -139,12 +145,16 @@ def main():
             if last_message != message:
                 last_message = message
                 send_message(bot, last_message)
+                time.sleep(RETRY_TIME)
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            send_message(bot, message)
-            logger.error(message, exc_info=True)
+            logger.error(message)
+            previous_message = send_not_doubled_message(
+                bot,
+                message,
+                previous_message
+            )
         finally:
-            current_timestamp = int(time.time())
             time.sleep(RETRY_TIME)
 
 
