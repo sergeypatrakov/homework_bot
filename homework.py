@@ -144,7 +144,7 @@ def main():
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
-            if message != previous_message and send_message():
+            if message != previous_message and send_message(bot, message):
                 # Функция же возвращает тру при успешной отправке, см. строку 60
                 previous_message = message
         finally:
