@@ -57,8 +57,7 @@ def send_message(bot, message):
         logger.info(
             f'Сообщение в чат отправлено: {message}'
         )
-        return True # Вот тут функция возвращает True при успешное отправке
-# Я использую ее в Exception 
+        return True
     except telegram.TelegramError as telegram_error:
         logger.error(
             f'Сообщение в чат не отправлено: {telegram_error}'
@@ -124,6 +123,13 @@ def check_tokens():
     return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
 
 
+def send_not_doubled_message(bot, message, previous_message): 
+    """Проверяет и отправляет сообщение без повтора..""" 
+    if message != previous_message: 
+        send_message(bot, message) 
+    return message 
+
+
 def main():
     """Основная логика работы бота."""
     if not check_tokens():
@@ -145,7 +151,6 @@ def main():
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
             if message != previous_message and send_message(bot, message):
-                # Функция же возвращает тру при успешной отправке, см. строку 60
                 previous_message = message
         finally:
             time.sleep(RETRY_TIME)
