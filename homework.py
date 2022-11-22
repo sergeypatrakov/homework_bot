@@ -57,7 +57,8 @@ def send_message(bot, message):
         logger.info(
             f'Сообщение в чат отправлено: {message}'
         )
-        return True
+        return True # Вот тут функция возвращает True при успешное отправке
+# Я использую ее в Exception 
     except telegram.TelegramError as telegram_error:
         logger.error(
             f'Сообщение в чат не отправлено: {telegram_error}'
@@ -144,7 +145,7 @@ def main():
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
             if message != previous_message and send_message():
-                bot.send_message(TELEGRAM_CHAT_ID, message)
+                # Функция же возвращает тру при успешной отправке, см. строку 60
                 previous_message = message
         finally:
             time.sleep(RETRY_TIME)
