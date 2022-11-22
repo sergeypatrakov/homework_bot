@@ -123,13 +123,6 @@ def check_tokens():
     return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
 
 
-def send_not_doubled_message(bot, message, previous_message): 
-    """Проверяет и отправляет сообщение без повтора..""" 
-    if message != previous_message: 
-        send_message(bot, message) 
-    return message 
-
-
 def main():
     """Основная логика работы бота."""
     if not check_tokens():
